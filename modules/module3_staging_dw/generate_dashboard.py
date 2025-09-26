@@ -32,20 +32,34 @@ def main():
     save_table_image(pd.DataFrame({'DataSource': ['CustomerLoyaltyProgram.csv']}), 'Data Source', 'datasource.png')
 
     # Ensure date/year/month fields
-    # Common columns in this dataset include: Order Year, Month, Category, Product Line, Quantity Sold, Revenue
-    # Create line chart: month-wise total sales for 2020
-    if 'Order Year' in df.columns and 'Month' in df.columns:
-        df_2020 = df[df['Order Year'] == 2020]
-        monthly = df_2020.groupby('Month', as_index=False)['Revenue'].sum()
-        monthly = monthly.sort_values('Month')
-        plt.figure(figsize=(12, 6))
-        sns.lineplot(data=monthly, x='Month', y='Revenue', marker='o')
-        plt.title('Month-wise Total Sales for 2020')
-        plt.xlabel('Month')
-        plt.ylabel('Revenue')
-        plt.tight_layout()
-        plt.savefig(OUT / 'linechart.png', dpi=150)
-        plt.close()
+    # Create line chart: month-wise total sales for 2020 (fallback to quarter index 1..4 if Month missing)
+    if 'Order Year' in df.columns:
+        d = df[df['Order Year'] == 2020].copy()
+        if 'Month' not in d.columns and 'Quarter' in d.columns:
+            def q_to_num(q: str):
+                try:
+                    return int(str(q).strip().upper().replace('Q', ''))
+                except Exception:
+                    return None
+            d['Month'] = d['Quarter'].map(q_to_num)
+        if 'Month' in d.columns:
+            monthly = d.groupby('Month', as_index=False)['Revenue'].sum().sort_values('Month')
+            # Fallback: if only one point for 2020, aggregate across all years using quarter mapping
+            if monthly['Month'].nunique() < 2 and 'Quarter' in df.columns:
+                d_all = df.copy()
+                d_all['Month'] = d_all['Quarter'].map(lambda q: int(str(q).strip().upper().replace('Q','')) if pd.notnull(q) else None)
+                monthly = d_all.groupby('Month', as_index=False)['Revenue'].sum().sort_values('Month')
+                chart_title = 'Quarter index (Q1..Q4) Total Sales (all years)'
+            else:
+                chart_title = 'Month-wise Total Sales for 2020'
+            plt.figure(figsize=(12, 6))
+            sns.lineplot(data=monthly, x='Month', y='Revenue', marker='o')
+            plt.title(chart_title)
+            plt.xlabel('Month')
+            plt.ylabel('Revenue')
+            plt.tight_layout()
+            plt.savefig(OUT / 'linechart.png', dpi=150)
+            plt.close()
 
     # Pie chart: category-wise total sales (Category or Product Line)
     category_col = 'Category' if 'Category' in df.columns else 'Product Line'
@@ -61,25 +75,37 @@ def main():
         plt.savefig(OUT / 'piechart.png', dpi=150)
         plt.close()
 
-    # Bar chart: Quarterly sales of mobile phones
-    # Use Category or Product Line to filter for Mobile Phones-like values
-    mobile_mask = pd.Series([False] * len(df))
-    for col in ['Category', 'Product Line']:
-        if col in df.columns:
-            mobile_mask = mobile_mask | df[col].str.contains('Mobile|Phone', case=False, na=False)
+    # Bar chart: Quarterly sales of mobile phones (fallback to top category if none)
     quarter_col = 'Quarter' if 'Quarter' in df.columns else None
     if quarter_col:
-        mobile = df[mobile_mask].copy()
-        if not mobile.empty:
-            q_sales = mobile.groupby(quarter_col)['Revenue'].sum().reindex([1, 2, 3, 4])
-            plt.figure(figsize=(10, 6))
-            q_sales.plot(kind='bar', color='#4e79a7')
-            plt.title('Quarterly Sales of Mobile Phones')
-            plt.xlabel('Quarter')
-            plt.ylabel('Revenue')
-            plt.tight_layout()
-            plt.savefig(OUT / 'barchart.png', dpi=150)
-            plt.close()
+        mobile_mask = pd.Series([False] * len(df))
+        for col in ['Category', 'Product Line']:
+            if col in df.columns:
+                mobile_mask = mobile_mask | df[col].astype(str).str.contains('Mobile|Phone', case=False, na=False)
+        data_for_bar = df[mobile_mask].copy()
+        title = 'Quarterly Sales of Mobile Phones'
+        if data_for_bar.empty:
+            # Fallback: pick top category by revenue
+            cat_col = 'Category' if 'Category' in df.columns else 'Product Line'
+            top_cat = df.groupby(cat_col)['Revenue'].sum().sort_values(ascending=False).index[0]
+            data_for_bar = df[df[cat_col] == top_cat].copy()
+            title = f'Quarterly Sales of {top_cat}'
+        # Map quarter to numeric 1..4
+        def q_to_num(q: str):
+            try:
+                return int(str(q).strip().upper().replace('Q', ''))
+            except Exception:
+                return None
+        data_for_bar['qnum'] = data_for_bar[quarter_col].map(q_to_num)
+        q_sales = data_for_bar.groupby('qnum')['Revenue'].sum().reindex([1, 2, 3, 4])
+        plt.figure(figsize=(10, 6))
+        q_sales.plot(kind='bar', color='#4e79a7')
+        plt.title(title)
+        plt.xlabel('Quarter')
+        plt.ylabel('Revenue')
+        plt.tight_layout()
+        plt.savefig(OUT / 'barchart.png', dpi=150)
+        plt.close()
 
 
 if __name__ == '__main__':
