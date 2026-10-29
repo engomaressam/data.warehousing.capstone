@@ -10,7 +10,7 @@ Databases
 - Test1: reporting lab database for loading CSVs
 
 Steps
-1) Ensure PostgreSQL is running and `psql` is in PATH. Local creds used: user `postgres`, password `PMO@1234`.
+1) Ensure PostgreSQL is running and `psql` is in PATH. Local creds used: user `postgres`, password `<your-password>`.
 2) Create DBs:
    - psql -U postgres -c "CREATE DATABASE softcart;"
    - psql -U postgres -c "CREATE DATABASE staging;"

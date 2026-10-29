@@ -8,8 +8,8 @@ Module 1 - Environment and OLTP (Local Alternatives)
 Steps
 1. Start MySQL and ensure `mysql` and `mysqldump` are in PATH.
 2. Create DB and table:
-   - mysql -u root -pPMO@1234 < modules/module1_environment/01_create_database.sql
-   - mysql -u root -pPMO@1234 < modules/module1_environment/02_sales_schema.sql
+   - mysql -u root -p<your-password> < modules/module1_environment/01_create_database.sql
+   - mysql -u root -p<your-password> < modules/module1_environment/02_sales_schema.sql
 3. Import `oltpdata.csv` into `sales.sales_data` via phpMyAdmin/DBeaver or CLI.
 4. Verify index:
    - SHOW INDEX FROM sales.sales_data;

@@ -20,7 +20,7 @@ def df_to_image(df: pd.DataFrame, title: str, filename: str):
 
 def main():
     # Use Test1 data which we loaded from CSVs
-    conn = psycopg2.connect(dbname='test1', user='postgres', password='PMO@1234', host='localhost')
+    conn = psycopg2.connect(dbname='test1', user='postgres', password='<your-password>', host='localhost')
     with conn, conn.cursor() as cur:
         # Cube sample (limit to keep image tidy)
         cur.execute("""

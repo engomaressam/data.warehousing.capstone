@@ -4,7 +4,7 @@ $ErrorActionPreference = 'Stop'
 $mysqlExe = 'C:/Program Files/MySQL/MySQL Server 8.0/bin/mysql.exe'
 $mysqldumpExe = 'C:/Program Files/MySQL/MySQL Server 8.0/bin/mysqldump.exe'
 $mysqlUser = 'root'
-$mysqlPwd  = 'PMO@1234'
+$mysqlPwd  = '<your-password>'
 $mysqlDb   = 'sales'
 
 $psqlExe   = 'psql'

@@ -6,7 +6,7 @@ CSV_PATH = Path('modules/module1_environment/oltpdata.csv')
 
 def main():
     conn = mysql.connector.connect(
-        host='localhost', user='root', password='PMO@1234', database='sales'
+        host='localhost', user='root', password='<your-password>', database='sales'
     )
     conn.autocommit = False
     cur = conn.cursor()
